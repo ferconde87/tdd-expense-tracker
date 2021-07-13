@@ -8,7 +8,7 @@ end
 
 module ExpenseTracker
   RSpec.describe 'Expense Tracker API' do
-    pending 'Need to persist expenses'
+    include Rack::Test::Methods
 
     def post_expense(expense)
       post '/expenses', JSON.generate(expense)
@@ -19,9 +19,6 @@ module ExpenseTracker
       expense.merge('id' => parsed['expense_id'])
     end
       
-
-    include Rack::Test::Methods
-
     it 'records submitted expenses' do
       coffee = {
         'payee' => 'Starbucks',
