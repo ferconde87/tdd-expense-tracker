@@ -47,6 +47,13 @@ RSpec.configure do |config|
   # triggering implicit auto-inclusion in groups with matching metadata.
   config.shared_context_metadata_behavior = :apply_to_host_groups
 
+  # RSpec will conditionally load spec/support/db.rb if (and
+  # only if) any examples are loaded that have a :db tag.  
+  config.when_first_matching_example_defined(:db) do
+    require_relative 'support/db'
+  end
+    
+
 # The settings below are suggested to provide a good initial experience
 # with RSpec, but feel free to customize to your heart's content.
 =begin
@@ -101,6 +108,7 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 
+config.order = :random
 
 config.filter_gems_from_backtrace 'rack', 'rack-test', 'sequel', 'sinatra'
 

@@ -7,7 +7,7 @@ def app
 end
 
 module ExpenseTracker
-  RSpec.describe 'Expense Tracker API' do
+  RSpec.describe 'Expense Tracker API', :db do
     include Rack::Test::Methods
 
     def post_expense(expense)
@@ -20,11 +20,11 @@ module ExpenseTracker
     end
       
     it 'records submitted expenses' do
-      coffee = {
+      coffee = post_expense(
         'payee' => 'Starbucks',
         'amount' => 5.75,
         'date' => '2017-06-10'
-      }
+      )
 
       zoo = post_expense(
         'payee' => 'Zoo',
@@ -42,7 +42,6 @@ module ExpenseTracker
       expect(last_response.status).to eq(200)
       expenses = JSON.parse(last_response.body)
       expect(expenses).to contain_exactly(coffee, zoo)
-
     end
   end
 end
