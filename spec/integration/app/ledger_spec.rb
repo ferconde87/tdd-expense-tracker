@@ -27,25 +27,35 @@ module ExpenseTracker
       end
 
       context 'with a invalid expense' do
+        def expectations(result, expense_attribute)
+          expect(result).not_to be_success
+          expect(result.expense_id).to eq(nil)
+          expect(result.error_message).to include("`#{expense_attribute}` is required")
+          expect(DB[:expenses].count).to eq(0)
+        end
+        
         context 'when the expense lacks a `payee`' do
           it 'rejects the expense as invalid' do
-            # expect(DB[:expenses].count).to eq(1) # borrar ésta linea
-
             expense.delete('payee')
-
             result = ledger.record(expense)
-
-            expect(result).not_to be_success
-            expect(result.expense_id).to eq(nil)
-            expect(result.error_message).to include('`payee` is required')
-            expect(DB[:expenses].count).to eq(0)
+            expectations(result, 'payee')
           end
         end
 
         context 'when the expense lacks a `amount`' do
+          it 'rejects the expense as invalid' do
+            expense.delete('amount')
+            result = ledger.record(expense)
+            expectations(result, 'amount')
+          end
         end
 
         context 'when the expense lacks a `date`' do
+          it 'rejects the expense as invalid' do
+            expense.delete('date')
+            result = ledger.record(expense)
+            expectations(result, 'date')
+          end
         end
       end
     end
