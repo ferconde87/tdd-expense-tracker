@@ -11,13 +11,14 @@ module ExpenseTracker
     end
 
     let(:ledger) { instance_double('ExpenseTracker::Ledger') }
+
     
     describe 'POST /expenses' do
       def parse_and_test(json_object, response)
         parsed = JSON.parse(json_object)
         expect(parsed).to include(response)
       end
-
+      
       context 'when the expense is successfully recorded' do
         let(:expense) { { 'some' => 'data' } }
   
@@ -34,6 +35,7 @@ module ExpenseTracker
         end
 
         it 'responds with a 200 (OK)' do
+          header 'Content-Type', 'application/json'
           post '/expenses', JSON.generate(expense)
           expect(last_response.status).to eq(200)
         end
@@ -73,12 +75,14 @@ module ExpenseTracker
         end
 
         it 'returns the expense records as JSON' do
+          header 'Content-Type', 'application/json'
           get "/expenses/#{date}"
           parsed = JSON.parse(last_response.body)
           expect(parsed).to eq(['expense_1', 'expense_2'])
         end
         
         it 'responds with a 200 (OK)' do
+          header 'Content-Type', 'application/json'
           get "/expenses/#{date}"
           expect(last_response.status).to eq(200)
         end
@@ -94,12 +98,14 @@ module ExpenseTracker
         end
 
         it 'returns an empty array as JSON' do
+          header 'Content-Type', 'application/json'
           get "/expenses/#{date}"
           parsed = JSON.parse(last_response.body)
           expect(parsed).to eq([])
         end
         
         it 'responds with a 200 (OK)' do
+          header 'Content-Type', 'application/json'
           get "/expenses/#{date}"
           expect(last_response.status).to eq(200)
         end

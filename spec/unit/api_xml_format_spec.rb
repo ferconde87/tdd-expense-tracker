@@ -73,13 +73,14 @@ module ExpenseTracker
         end
 
         it 'returns the expense records as JSON' do
-          header 'Accept', 'text/xml'
+          header 'Content-Type', 'text/xml'
           get "/expenses/#{date}"
           parsed = Ox.parse_obj(last_response.body)
           expect(parsed).to eq(['expense_1', 'expense_2'])
         end
         
         it 'responds with a 200 (OK)' do
+          header 'Content-Type', 'text/xml'
           get "/expenses/#{date}"
           expect(last_response.status).to eq(200)
         end
@@ -95,14 +96,14 @@ module ExpenseTracker
         end
 
         it 'returns an empty array as XML' do
-          header 'Accept', 'text/xml'
+          header 'Content-Type', 'text/xml'
           get "/expenses/#{date}"
           parsed = Ox.parse_obj(last_response.body)
           expect(parsed).to eq([])
         end
         
         it 'responds with a 200 (OK)' do
-          header 'Accept', 'text/xml'
+          header 'Content-Type', 'text/xml'
           get "/expenses/#{date}"
           expect(last_response.status).to eq(200)
         end
