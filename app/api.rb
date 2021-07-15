@@ -16,17 +16,19 @@ module ExpenseTracker
       elsif request.media_type == 'text/xml'
         post_xml(request)
       else
-        #TODO: format error
+        status 422
+        JSON.generate({'error' => "Not Supported Format"})
       end
     end
 
     get '/expenses/:date' do
-      if request.accept? 'application/json'
+      if request.media_type == 'application/json'
         JSON.generate(@ledger.expenses_on(params[:date]))
-      elsif request.accept? 'text/xml'
+      elsif request.media_type == 'text/xml'
         Ox.dump(@ledger.expenses_on(params[:date]))
       else
-        #TODO: format error
+        status 422
+        JSON.generate({'error' => "Not Supported Format"})
       end
     end
 
