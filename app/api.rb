@@ -1,6 +1,7 @@
 require 'sinatra/base'
 require 'json'
 require_relative 'ledger'
+require 'ox'
 
 module ExpenseTracker
   class API < Sinatra::Base
@@ -8,8 +9,30 @@ module ExpenseTracker
       @ledger = ledger
       super()
     end
-      
+
     post '/expenses' do
+      if request.media_type == 'application/json'
+        post_json(request)       
+      elsif request.media_type == 'text/xml'
+        post_xml(request)
+      else
+        #TODO: format error
+      end
+    end
+
+    get '/expenses/:date' do
+      if request.accept? 'application/json'
+        JSON.generate(@ledger.expenses_on(params[:date]))
+      elsif request.accept? 'text/xml'
+        Ox.dump(@ledger.expenses_on(params[:date]))
+      else
+        #TODO: format error
+      end
+    end
+
+    private
+
+    def post_json(request)
       expense = JSON.parse(request.body.read)
       result = @ledger.record(expense)
       if result.success?
@@ -20,8 +43,15 @@ module ExpenseTracker
       end
     end
 
-    get '/expenses/:date' do
-      JSON.generate(@ledger.expenses_on(params[:date]))
+    def post_xml(request)
+      expense = Ox.parse_obj(request.body.read)
+      result = @ledger.record(expense)
+      if result.success?
+        Ox.dump('expense_id' => result.expense_id)
+      else
+        status 422
+        Ox.dump('error' => result.error_message)
+      end
     end
   end
 end

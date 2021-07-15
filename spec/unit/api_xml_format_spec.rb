@@ -1,6 +1,7 @@
 require_relative '../../app/api'
 require 'rack/test'
 require 'json'
+require 'ox'
 
 module ExpenseTracker
   RSpec.describe API do
@@ -13,14 +14,10 @@ module ExpenseTracker
     let(:ledger) { instance_double('ExpenseTracker::Ledger') }
     
     describe 'POST /expenses' do
-      def parse_and_test(json_object, response)
-        parsed = JSON.parse(json_object)
-        expect(parsed).to include(response)
-      end
-
       context 'when the expense is successfully recorded' do
-        let(:expense) { { 'some' => 'data' } }
-  
+        let(:expense) { {'some' => 'data'} }
+        let(:expense_xml) { Ox.dump(expense) }
+
         before do
           allow(ledger).to receive(:record)
             .with(expense)
@@ -28,19 +25,22 @@ module ExpenseTracker
         end
 
         it 'returns the expense id' do
-          header 'Content-Type', 'application/json'
-          post '/expenses', JSON.generate(expense)
-          parse_and_test(last_response.body, 'expense_id' => 417)
+          header 'Content-Type', 'text/xml'
+          post '/expenses', expense_xml
+          parsed = Ox.parse_obj(last_response.body) # from XML to Ruby Object
+          expect(parsed).to include({'expense_id' => 417})
         end
 
         it 'responds with a 200 (OK)' do
-          post '/expenses', JSON.generate(expense)
+          header 'Content-Type', 'text/xml'
+          post '/expenses', expense_xml
           expect(last_response.status).to eq(200)
         end
       end
       
       context 'when the expense is fails validation' do
         let(:expense) { { 'some' => 'data' } }
+        let(:expense_xml) { Ox.dump(expense) }
   
         before do
           allow(ledger).to receive(:record)
@@ -49,14 +49,14 @@ module ExpenseTracker
         end
 
         it 'returns an error message' do
-          header 'Content-Type', 'application/json'
-          post '/expenses', JSON.generate(expense)
-          parse_and_test(last_response.body, 'error' => 'Expense incomplete')
+          header 'Content-Type', 'text/xml'
+          post '/expenses', expense_xml
+          parsed = Ox.parse_obj(last_response.body)
+          expect(parsed).to include ({'error' => 'Expense incomplete'})
         end
-
         it 'responds with a 422 (Unprocessable entity)' do
-          header 'Content-Type', 'application/json'
-          post '/expenses', JSON.generate(expense)
+          header 'Content-Type', 'text/xml'
+          post '/expenses', expense_xml
           expect(last_response.status).to eq(422)
         end
       end
@@ -73,8 +73,9 @@ module ExpenseTracker
         end
 
         it 'returns the expense records as JSON' do
+          header 'Accept', 'text/xml'
           get "/expenses/#{date}"
-          parsed = JSON.parse(last_response.body)
+          parsed = Ox.parse_obj(last_response.body)
           expect(parsed).to eq(['expense_1', 'expense_2'])
         end
         
@@ -93,13 +94,15 @@ module ExpenseTracker
             .and_return([])
         end
 
-        it 'returns an empty array as JSON' do
+        it 'returns an empty array as XML' do
+          header 'Accept', 'text/xml'
           get "/expenses/#{date}"
-          parsed = JSON.parse(last_response.body)
+          parsed = Ox.parse_obj(last_response.body)
           expect(parsed).to eq([])
         end
         
         it 'responds with a 200 (OK)' do
+          header 'Accept', 'text/xml'
           get "/expenses/#{date}"
           expect(last_response.status).to eq(200)
         end
